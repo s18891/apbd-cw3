@@ -27,7 +27,7 @@ namespace WebApplication3.Controllers
                 com.CommandText = "select * from student";
 
                 con.Open();
-                SqlDataReader dr=com.ExecuteReader();
+                SqlDataReader dr = com.ExecuteReader();
                 while (dr.Read())
                 {
 
@@ -76,11 +76,68 @@ namespace WebApplication3.Controllers
                     st.LastName = dr["LastName"].ToString();
                     list.Add(st);
 
+                    return Ok(st);
 
                 }
             }
 
-                return Ok();
+            return Ok();
+        }
+
+        [HttpGet]
+        public IActionResult GetStudents2()
+        {
+
+
+            using (SqlConnection con = new SqlConnection(ConString))
+            using (SqlCommand com = new SqlCommand())
+            {
+                com.Connection = con;
+                com.CommandText = "TestProc3";
+                com.CommandType = System.Data.CommandType.StoredProcedure;
+
+                com.Parameters.AddWithValue("LastName", "Kowalski");
+
+                var dr = com.ExecuteReader();
+                ///... jak w poprzednim
+            }
+            return NotFound();
+        }
+
+
+        [HttpGet]
+        public IActionResult GetStudents3()
+        {
+
+
+            using (SqlConnection con = new SqlConnection(ConString))
+            using (SqlCommand com = new SqlCommand())
+            {
+                com.Connection = con;
+                com.CommandText = "insert into.....";
+
+
+                con.Open();
+
+                SqlTransaction transaction = con.BeginTransaction();
+                try
+                {
+                    int affectedrows = com.ExecuteNonQuery();
+                    com.CommandText = "udpate into....";
+                    com.ExecuteNonQuery();
+
+                    transaction.Commit();
+                }
+                catch(Exception exc)
+                {
+                    transaction.Rollback();
+                }
+
+
+            }
+            return Ok();
+
+
         }
 
 
