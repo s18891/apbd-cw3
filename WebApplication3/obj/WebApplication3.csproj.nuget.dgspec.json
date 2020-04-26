@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\CircaSurvive\\source\\repos\\WebApplication3\\WebApplication3\\WebApplication3.csproj": {}
+    "C:\\Users\\CircaSurvive\\Source\\Repos\\s18891\\apbd-cw3\\WebApplication3\\WebApplication3.csproj": {}
   },
   "projects": {
-    "C:\\Users\\CircaSurvive\\source\\repos\\WebApplication3\\WebApplication3\\WebApplication3.csproj": {
+    "C:\\Users\\CircaSurvive\\Source\\Repos\\s18891\\apbd-cw3\\WebApplication3\\WebApplication3.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\CircaSurvive\\source\\repos\\WebApplication3\\WebApplication3\\WebApplication3.csproj",
+        "projectUniqueName": "C:\\Users\\CircaSurvive\\Source\\Repos\\s18891\\apbd-cw3\\WebApplication3\\WebApplication3.csproj",
         "projectName": "WebApplication3",
-        "projectPath": "C:\\Users\\CircaSurvive\\source\\repos\\WebApplication3\\WebApplication3\\WebApplication3.csproj",
+        "projectPath": "C:\\Users\\CircaSurvive\\Source\\Repos\\s18891\\apbd-cw3\\WebApplication3\\WebApplication3.csproj",
         "packagesPath": "C:\\Users\\CircaSurvive\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\CircaSurvive\\source\\repos\\WebApplication3\\WebApplication3\\obj\\",
+        "outputPath": "C:\\Users\\CircaSurvive\\Source\\Repos\\s18891\\apbd-cw3\\WebApplication3\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
