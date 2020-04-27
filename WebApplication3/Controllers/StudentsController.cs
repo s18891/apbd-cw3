@@ -16,8 +16,16 @@ namespace WebApplication3.Controllers
     {
         private const string ConString = "Data Source=db-mssql;Initial Catalog=s18891;Integrated Security=True";
 
+        private IStudentsDal _dbService;
+
+        public StudentsController(IStudentsDal dbService)
+        {
+            _dbService = dbService; 
+
+        }
+        
         [HttpGet]
-        public IActionResult GetStudents()
+        public IActionResult GetStudents([FromServices] IStudentsDal dbService)
         {
             var list = new List<Student>();
             using (SqlConnection con = new SqlConnection(ConString))
@@ -84,7 +92,7 @@ namespace WebApplication3.Controllers
             return Ok();
         }
 
-        [HttpGet]
+        [HttpGet("ex2")]
         public IActionResult GetStudents2()
         {
 
@@ -105,7 +113,7 @@ namespace WebApplication3.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("ex3")]
         public IActionResult GetStudents3()
         {
 
