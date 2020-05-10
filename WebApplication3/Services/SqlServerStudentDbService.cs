@@ -52,6 +52,7 @@ namespace WebApplication3.Services
                 command.CommandText = "select * from Enrollment where IdStudy=@IdStudies and Semester = 1";
                 command.Parameters.AddWithValue("IdStudies", idStudies);
 
+
                 dr.Close();
                 dr = command.ExecuteReader();
                 if (!dr.Read())
