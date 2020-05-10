@@ -13,30 +13,34 @@ using WebApplication3.Services;
 
 namespace WebApplication3.Controllers
 {
-    [ApiController]
     [Route("api/enrollments")]
+    [ApiController]
     public class EnrollmentsController : ControllerBase
     {
-        private IStudentDbService _service;
+        private IStudentDbServeice _service;
 
-        public EnrollmentsController(IStudentDbService service)
+        public EnrollmentsController(IStudentDbServeice serveice)
         {
-            this._service = service;
+            _service = serveice;
         }
 
-        [HttpPost]
-        public IActionResult SignUpStudentForStudies(EnrollStudentRequest request)
+
+
+
+
+[HttpPost]
+        public IActionResult EnrollStudent(EnrollStudentRequest request)
         {
-            string response = _service.enrollStudent(request);
+
+            
+
+                var response = new EnrollStudentResponse();
+            //response.LastName = st.LastName;
+            //...
+
+
             return Ok(response);
         }
 
-        [HttpPost]
-        [Route("api/enrollments/promotions")]
-        public IActionResult PromoteStudents(PromoteStudentRequest request)
-        {
-            List<Enrollment> list = _service.promoteStudents(request);
-            return Ok(list);
-        }
     }
 }
