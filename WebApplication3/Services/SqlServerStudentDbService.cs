@@ -3,93 +3,117 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using WebApplication3.DTOs.Requests;
 using WebApplication3.Models;
 
 namespace WebApplication3.Services
+
 {
-    public class SqlServerStudentDbService : IStudentDbServeice
-    {
-        public void EnrollStudent(EnrollStudentRequest request)
+    public class SqlServerStudentDbService : IStudentDbService
+{
+    private const string connString = "Data Source=db-mssql;Initial Catalog=s18891;Integrated Security=True";
+
+        public string enrollStudent(EnrollStudentRequest request)
         {
-
-            /*  
-             *  inna starsza walidacja będów zamiast [ApiController]
-             *  
-             *  if (!ModelState.IsValid)
-              {
-                  var d = ModelState;
-                  return BadRequest("!!!");
-              }
-
-      */
-
-
-
-            //DTOs data transfer objects
-            //request models
-            //==mapowanie
-            // Modele biznesowe 
-            //==mapowanie
-            //response models
-            var st = new Student();
-            st.FirstName = request.FirstName;
-            //...
-            //...
-            using (SqlConnection con = new SqlConnection(""))
-            using (SqlCommand com = new SqlCommand())
+            using (var connection = new SqlConnection(connString))
+            using (var command = new SqlCommand())
             {
-                com.Connection = con;
+                command.Connection = connection;
+                connection.Open();
+                var transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
 
-                con.Open();
-                var tran = con.BeginTransaction();
+                command.CommandText = "select IdStudy from Studies where name=@name";
+                command.Parameters.AddWithValue("name", request.Studies);
 
-                try
+                var dr = command.ExecuteReader();
+                if (!dr.Read())
                 {
-                    //1. Czy studia istnieja?
-                    com.CommandText = "select IdStudies from studies where name=@name";
-                    com.Parameters.AddWithValue("name", request.Studies);
-
-                    var dr = com.ExecuteReader();
-
-                    if (!dr.Read())
-                    {
-                        tran.Rollback();
-                        //..
-                    }
-
-                    int idstudies = (int)dr["IdStudies"];
-
-                    //x. Dodanie studenta
-
-                    com.CommandText = "INSERT INTO Student(IndexNumber,FirstName) VALUES(@Index, @Fname)";
-                    com.Parameters.AddWithValue("index", request.IndexNumber);
-                    //....
-                    com.ExecuteNonQuery();
-
-                    tran.Commit();
-
+                    dr.Close();
+                    transaction.Rollback();
+                    return "Studia nie istnieja";
                 }
-                catch (SqlException exc)
+                int idStudies = (int)dr["IdStudy"];
+
+                command.CommandText = "select IndexNumber from Student where IndexNumber=@IndexNumber";
+                command.Parameters.AddWithValue("IndexNumber", request.IndexNumber);
+
+                dr.Close();
+                dr = command.ExecuteReader();
+                if (dr.Read())
                 {
-                    tran.Rollback();
+                    dr.Close();
+                    transaction.Rollback();
+                    return "Student o podanym indeksie juz istnieje";
                 }
-            }
-            }
 
-        public Student GetStudent(string IndexNumber)
-        {
-            if (IndexNumber == "s1234")
-            {
-                return new Student { IndexNumber = "1", FirstName = "Jan", LastName = "Kowalski" };
-            }
+                int IdEnrollment;
+                command.CommandText = "select * from Enrollment where IdStudy=@IdStudies and Semester = 1";
+                command.Parameters.AddWithValue("IdStudies", idStudies);
 
-            return null;
+                dr.Close();
+                dr = command.ExecuteReader();
+                if (!dr.Read())
+                {
+                    command.CommandText = "select max(IdEnrollment) from Enrollment";
+                    var reader = command.ExecuteReader();
+                    IdEnrollment = (int)reader["IdEnrollment"];
+                    IdEnrollment++;
+
+                    command.CommandText = "Insert into Enrollment(IdEnrollment, Semester, IdStudy, StartDate) values(@IdEnrollment, 1, @IdStudies, GETDATE())";
+                    command.Parameters.AddWithValue("IdEnrollment", IdEnrollment);
+                    command.Parameters.AddWithValue("IdStudies", idStudies);
+                    command.ExecuteReader();
+                }
+                IdEnrollment = (int)dr["IdEnrollment"];
+                command.CommandText = "Insert into Student(IndexNumber, FirstName, LastName, BirthDate, IdEnrollment) values(@IndexNumber, @FirstName, @Lastname, @BirthDate, @IdEnrollment)";
+                command.Parameters.Clear();
+                command.Parameters.AddWithValue("IndexNumber", request.IndexNumber);
+                command.Parameters.AddWithValue("FirstName", request.FirstName);
+                command.Parameters.AddWithValue("LastName", request.LastName);
+                command.Parameters.AddWithValue("BirthDate", request.BirthDate);
+                command.Parameters.AddWithValue("IdEnrollment", IdEnrollment);
+
+                dr.Close();
+                command.ExecuteNonQuery();
+                dr.Close();
+
+                transaction.Commit();
+                dr.Close();
+                return "Dodano studenta do bazy danych";
+            }
         }
 
-        public void PromoteStudents(int semester, string studies)
+        public List<Enrollment> promoteStudents(PromoteStudentRequest request)
         {
-            throw new NotImplementedException();
+            List<Enrollment> list = new List<Enrollment>();
+            using (var connection = new SqlConnection(connString))
+            using (var command = new SqlCommand())
+            {
+                command.Connection = connection;
+                connection.Open();
+                var transaction = connection.BeginTransaction();
+                command.Transaction = transaction;
+
+                command.CommandText = "exec PromoteStudents @StudiesName, @Semester";
+                command.Parameters.AddWithValue("StudiesName", request.Studies);
+                command.Parameters.AddWithValue("Semester", request.Semester);
+
+                command.ExecuteNonQuery();
+                command.CommandText = "Select * from Enrollment";
+                var dr = command.ExecuteReader();
+                while (dr.Read())
+                {
+                    Enrollment enrollment = new Enrollment();
+                    enrollment.IdEnrollment = (string)dr["IdEnrollment"];
+                    enrollment.Semester = (string)dr["Semester"];
+                    enrollment.IdStudy = (string)dr["IdStudy"];
+                    enrollment.StartDate = (string)dr["StartDate"];
+                    list.Add(enrollment);
+                }
+            }
+            return list;
         }
     }
 }
