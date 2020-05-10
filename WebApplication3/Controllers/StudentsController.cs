@@ -10,196 +10,85 @@ using WebApplication3.Services;
 
 namespace WebApplication3.Controllers
 {
-    [Route("api/students")]
     [ApiController]
+    [Route("api/students")]
     public class StudentsController : ControllerBase
     {
-        private const string ConString = "Data Source=db-mssql;Initial Catalog=s18891;Integrated Security=True";
+        private readonly IDbService dbService;
+        private ICollection<Student> _students;
+        string connString = "Data Source=db-mssql;Initial Catalog=s18891;Integrated Security=True";
 
-        private IStudentsDal _dbService;
-
-        public StudentsController(IStudentsDal dbService)
+        public StudentsController(IDbService dbService)
         {
-            _dbService = dbService; 
-
-        }
-        
-        [HttpGet]
-        public IActionResult GetStudents([FromServices] IStudentsDal dbService)
-        {
-            var list = new List<Student>();
-            using (SqlConnection con = new SqlConnection(ConString))
-            using (SqlCommand com = new SqlCommand())
-            {
-                com.Connection = con;
-                com.CommandText = "select * from student";
-
-                con.Open();
-                SqlDataReader dr = com.ExecuteReader();
-                while (dr.Read())
-                {
-
-                    var st = new Student();
-                    st.IndexNumber = dr["IndexNumber"].ToString();
-                    st.FirstName = dr["FirstName"].ToString();
-                    st.LastName = dr["LastName"].ToString();
-                    list.Add(st);
-
-
-                }
-
-            }
-
-            return Ok(list);
+            this.dbService = dbService;
+            this._students = (List<Student>)dbService.GetStudents();
         }
 
-
-        [HttpGet("{indexNumber}")]
-        public IActionResult GetStudent(String indexNumber)
-        {
-
-            var list = new List<Student>();
-
-            using (SqlConnection con = new SqlConnection(ConString))
-            using (SqlCommand com = new SqlCommand())
-            {
-                com.Connection = con;
-                com.CommandText = "select * from student where indexnumber=@index";
-
-                com.Parameters.AddWithValue("index", indexNumber);
-
-
-                con.Open();
-                con.Open();
-
-
-                SqlDataReader dr = com.ExecuteReader();
-
-                if (dr.Read())
-                {
-
-                    var st = new Student();
-                    st.IndexNumber = dr["IndexNumber"].ToString();
-                    st.FirstName = dr["FirstName"].ToString();
-                    st.LastName = dr["LastName"].ToString();
-                    list.Add(st);
-
-                    return Ok(st);
-
-                }
-            }
-
-            return Ok();
-        }
-
-        [HttpGet("ex2")]
-        public IActionResult GetStudents2()
-        {
-
-
-            using (SqlConnection con = new SqlConnection(ConString))
-            using (SqlCommand com = new SqlCommand())
-            {
-                com.Connection = con;
-                com.CommandText = "TestProc3";
-                com.CommandType = System.Data.CommandType.StoredProcedure;
-
-                com.Parameters.AddWithValue("LastName", "Kowalski");
-
-                var dr = com.ExecuteReader();
-                ///... jak w poprzednim
-            }
-            return NotFound();
-        }
-
-
-        [HttpGet("ex3")]
-        public IActionResult GetStudents3()
-        {
-
-
-            using (SqlConnection con = new SqlConnection(ConString))
-            using (SqlCommand com = new SqlCommand())
-            {
-                com.Connection = con;
-                com.CommandText = "insert into.....";
-
-
-                con.Open();
-
-                SqlTransaction transaction = con.BeginTransaction();
-                try
-                {
-                    int affectedrows = com.ExecuteNonQuery();
-                    com.CommandText = "udpate into....";
-                    com.ExecuteNonQuery();
-
-                    transaction.Commit();
-                }
-                catch(Exception exc)
-                {
-                    transaction.Rollback();
-                }
-
-
-            }
-            return Ok();
-
-
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /*
-        private IDbService _dbService;
-        public StudentsController(IDbService service)
-        {
-            _dbService = service;
-        }
-
-
-        //2. QueryString
         [HttpGet]
         public IActionResult GetStudents(string orderBy)
         {
-            if(orderBy == "lastname")
-            return Ok(_dbService.GetStudents().OrderBy(s=> s.LastName));
 
-            return Ok(_dbService.GetStudents());
+            using (var connection = new SqlConnection(connString))
+            using (var command = new SqlCommand())
+            {
+                command.Connection = connection;
+                command.CommandText = "select s.FirstName, s.LastName, s.BirthDate, e.Semester, st.Name from Student s, Enrollment e, Studies st where s.IdEnrollment = e.IdEnrollment and e.IdStudy = st.IdStudy;";
 
+                connection.Open();
+                var dr = command.ExecuteReader();
+                while (dr.Read())
+                {
+                    var student = new Student
+                    {
+                        FirstName = dr["FirstName"].ToString(),
+                        LastName = dr["LastName"].ToString(),
+                        BirthDate = dr["BirthDate"].ToString(),
+                        SemesterNumber = dr["Semester"].ToString(),
+                        StudiesName = dr["Name"].ToString()
+                    };
+                    _students.Add(student);
+                }
+                return Ok(_students);
+            }
         }
 
-
-        //URL segment
-        [HttpGet("{id}")]
-
-        public IActionResult GetStudent(int id)
+        [HttpGet("{indexNumber}")]
+        public IActionResult GetStudent(string indexNumber)
         {
-            if(id ==1)
-            return Ok("A");
+            using (var connection = new SqlConnection(connString))
+            using (var command = new SqlCommand())
+            {
+                command.Connection = connection;
+                command.CommandText = "select s.FirstName, s.LastName, e.Semester, e.StartDate from Student s, Enrollment e where s.IdEnrollment = e.IdEnrollment and s.IndexNumber = @index";
+                command.Parameters.AddWithValue("index", indexNumber);
+                connection.Open();
 
-            return NotFound("Student Not found");
+                var dr = command.ExecuteReader();
+                while (dr.Read())
+                {
+                    var student = new Student
+                    {
+                        FirstName = dr["FirstName"].ToString(),
+                        LastName = dr["LastName"].ToString(),
+                        SemesterNumber = dr["Semester"].ToString()
+                    };
+                }
+                return Ok(_students);
+            }
         }
 
         [HttpPost]
-        public IActionResult CreateStudent(Student student) {
-            student.IndexNumber = $"s{new Random().Next(1, 20000)}";
-
-            return Ok(student); //JSON
+        public IActionResult CreateStudent(Student student)
+        {
+            //student.IndexNumber = $"s{new Random().Next(1, 20000)}";
+            return Ok(student);
         }
 
-    */
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteStudent(int id)
+        {
+            return Ok(200 + " Usuwanie zakonczone");
+        }
     }
 }

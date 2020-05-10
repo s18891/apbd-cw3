@@ -8,16 +8,14 @@ namespace WebApplication3.DTOs.Requests
 {
     public class EnrollStudentRequest
     {
-        //[RegularExpression("^s[0-9]+$")]
+        [Required]
         public string IndexNumber { get; set; }
-        [Required(ErrorMessage ="Musisz podac imię")]
-        [MaxLength(10)]
+        [Required]
         public string FirstName { get; set; }
         [Required]
-        [MaxLength(255)]
         public string LastName { get; set; }
-
-        public DateTime Birthdate { get; set; }
+        [Required]
+        public string BirthDate { get; set; }
         [Required]
         public string Studies { get; set; }
 
